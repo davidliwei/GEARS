@@ -11,6 +11,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from .utils import parse_single_pert, parse_combo_pert, parse_any_pert, print_sys
+from scipy.sparse import issparse # Import issparse to check for sparse matrices
 
 def rank_genes_groups_by_cov(
     adata,
@@ -81,7 +82,14 @@ def get_dropout_non_zero_genes(adata):
     for i, j in conditions2index.items():
         condition2mean_expression[i] = np.mean(adata.X[j], axis = 0)
     pert_list = np.array(list(condition2mean_expression.keys()))
-    mean_expression = np.array(list(condition2mean_expression.values())).reshape(len(adata.obs.condition.unique()), adata.X.toarray().shape[1])
+
+    #mean_expression = np.array(list(condition2mean_expression.values())).reshape(len(adata.obs.condition.unique()), adata.X.toarray().shape[1])
+    # Use toarray() only if the matrix is sparse
+    if issparse(adata.X):
+        mean_expression = np.array(list(condition2mean_expression.values())).reshape(len(adata.obs.condition.unique()), adata.X.toarray().shape[1])
+    else:
+        mean_expression = np.array(list(condition2mean_expression.values())).reshape(len(adata.obs.condition.unique()), adata.X.shape[1])
+
     ctrl = mean_expression[np.where(pert_list == 'ctrl')[0]]
     
     ## in silico modeling and upperbounding
