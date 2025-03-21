@@ -278,7 +278,8 @@ def get_coexpression_network_from_train(adata, threshold, k, data_path,
         train_gene_set_size (int): size of training gene set
         set2conditions (dict): dictionary of perturbations to conditions
     """
-    
+    from scipy.sparse import issparse
+
     fname = os.path.join(os.path.join(data_path, data_name), split + '_'  +
                          str(seed) + '_' + str(train_gene_set_size) + '_' +
                          str(threshold) + '_' + str(k) +
@@ -294,7 +295,9 @@ def get_coexpression_network_from_train(adata, threshold, k, data_path,
         X_tr = X[np.isin(adata.obs.condition, [i for i in train_perts if 'ctrl' in i])]
         gene_list = adata.var['gene_name'].values
 
-        X_tr = X_tr.toarray()
+        #X_tr = X_tr.toarray()
+        if issparse(X_tr):
+            X_tr = X_tr.toarray()  
         out = np_pearson_cor(X_tr, X_tr)
         out[np.isnan(out)] = 0
         out = np.abs(out)
